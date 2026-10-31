@@ -1,0 +1,123 @@
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#f7f8fc" />
+    <meta name="description" content="Convierte PDFs en lecturas claras con procesamiento local." />
+    <title>PDF Resumen — Menos páginas. Más claridad.</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+      window.pdfjsLib && (window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js');
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.0/dist/tesseract.min.js"></script>
+    <script type="module" src="./app.js"></script>
+  <style id="lf-tema">html,body{background:#ffffff !important;color:#1a1a1a !important;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif !important;font-size:16px !important}</style></head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#inicio" aria-label="PDF Resumen, inicio">
+          <span class="brand-mark" aria-hidden="true"><span>PR</span><i></i></span>
+          <span class="brand-name">PDF <strong>Resumen</strong></span>
+        </a>
+        <div class="topbar-note"><span class="status-dot"></span> Procesamiento local</div>
+      </header>
+
+      <main id="inicio" class="main-content">
+        <section class="hero" aria-labelledby="hero-title">
+          <div class="eyebrow"><span class="eyebrow-line"></span> LECTOR INTELIGENTE DE DOCUMENTOS</div>
+          <h1 id="hero-title">Menos páginas.<br /><em>Más claridad.</em></h1>
+          <p class="hero-copy">Sube un PDF y conviértelo en una lectura que puedas entender, recordar y usar. Incluso si es un libro escaneado.</p>
+        </section>
+
+        <section class="workspace" aria-label="Área de trabajo">
+          <div class="workspace-main">
+            <div id="drop-zone" class="drop-zone" tabindex="0" role="button" aria-label="Seleccionar un archivo PDF">
+              <input id="pdf-input" type="file" accept="application/pdf,.pdf" hidden />
+              <div class="drop-orbit" aria-hidden="true">
+                <div class="pdf-glyph"><span>PDF</span><i></i></div>
+              </div>
+              <div class="drop-copy">
+                <h2>Trae tu documento aquí</h2>
+                <p>Arrastra un PDF o <button id="browse-button" class="text-button" type="button">búscalo en tu dispositivo</button></p>
+                <span class="drop-hint">Ilimitado · el archivo no sale de tu dispositivo</span>
+              </div>
+              <span class="drop-corner drop-corner-tl"></span><span class="drop-corner drop-corner-br"></span>
+            </div>
+
+            <div id="file-panel" class="file-panel is-hidden" aria-live="polite">
+              <div class="file-preview-wrap">
+                <img id="pdf-preview" class="pdf-preview" alt="Vista previa de la primera página" />
+                <span class="preview-page">PÁG. 01</span>
+              </div>
+              <div class="file-details">
+                <div class="file-kicker"><span class="tiny-dot"></span> DOCUMENTO LISTO</div>
+                <h2 id="file-name">Documento.pdf</h2>
+                <div class="file-meta"><span id="file-size">0 MB</span><span class="meta-separator">/</span><span id="file-pages">0 páginas</span><span class="meta-separator">/</span><span id="file-type">Detectando</span></div>
+                <div class="file-progress-line"><span id="file-progress-bar"></span></div>
+                <p id="file-status" class="file-status">Preparando documento…</p>
+              </div>
+              <button id="remove-file" class="icon-button" type="button" aria-label="Quitar documento" title="Quitar documento"><span aria-hidden="true">×</span></button>
+            </div>
+
+            <div id="settings-panel" class="settings-panel is-hidden">
+              <div class="settings-heading">
+                <div><span class="section-label">02 / AJUSTES</span><h2>Elige tu nivel de detalle</h2></div>
+                <span class="settings-note">Resumen en español</span>
+              </div>
+              <div class="length-options" role="radiogroup" aria-label="Longitud del resumen">
+                <button class="length-option" type="button" data-length="brief" role="radio" aria-checked="false"><span class="option-number">01</span><span><strong>Breve</strong><small>Lo esencial en 5 ideas</small></span><span class="option-check" aria-hidden="true">○</span></button>
+                <button class="length-option is-selected" type="button" data-length="balanced" role="radio" aria-checked="true"><span class="option-number">02</span><span><strong>Equilibrado</strong><small>Contexto y puntos clave</small></span><span class="option-check" aria-hidden="true">●</span></button>
+                <button class="length-option" type="button" data-length="detailed" role="radio" aria-checked="false"><span class="option-number">03</span><span><strong>Detallado</strong><small>Una lectura más completa</small></span><span class="option-check" aria-hidden="true">○</span></button>
+              </div>
+              <button id="summarize-button" class="primary-button" type="button"><span>Generar resumen</span><span class="button-arrow" aria-hidden="true">↗</span></button>
+            </div>
+
+            <div id="progress-panel" class="progress-panel is-hidden" aria-live="polite">
+              <div class="progress-top"><span class="section-label">03 / LECTURA EN CURSO</span><span id="progress-percent" class="progress-percent">0%</span></div>
+              <div class="progress-track"><span id="progress-bar"></span></div>
+              <div class="progress-stage"><span class="progress-pulse"></span><strong id="progress-title">Abriendo documento</strong><span id="progress-detail">Preparando la primera página…</span></div>
+            </div>
+
+            <section id="results-panel" class="results-panel is-hidden" aria-live="polite" aria-labelledby="results-title">
+              <div class="results-heading">
+                <div><span class="section-label">04 / TU RESUMEN</span><h2 id="results-title">Una lectura más ligera</h2></div>
+                <div class="result-actions"><button id="copy-button" class="secondary-button" type="button"><span aria-hidden="true">⧉</span> Copiar</button><button id="download-button" class="secondary-button" type="button"><span aria-hidden="true">↓</span> Descargar</button></div>
+              </div>
+              <div class="summary-card">
+                <div class="summary-card-top"><span id="summary-kind" class="summary-badge">EQUILIBRADO</span><span id="summary-date" class="summary-date">Generado ahora</span></div>
+                <p id="summary-lead" class="summary-lead"></p>
+                <div id="summary-points" class="summary-points"></div>
+                <div class="keywords-block"><span class="section-label">PALABRAS QUE SE REPITEN</span><div id="keywords" class="keyword-list"></div></div>
+              </div>
+              <div class="text-drawer">
+                <button id="toggle-source" class="drawer-toggle" type="button" aria-expanded="false"><span><span class="section-label">TEXTO EXTRAÍDO</span><strong>Ver el texto que usamos</strong></span><span class="drawer-chevron" aria-hidden="true">⌄</span></button>
+                <div id="source-text" class="source-text is-hidden"></div>
+              </div>
+              <button id="new-document" class="new-document-button" type="button">← Resumir otro documento</button>
+            </section>
+          </div>
+
+          <aside class="side-rail" aria-label="Información del proceso">
+            <div class="rail-block">
+              <span class="section-label">CÓMO FUNCIONA</span>
+              <ol class="process-list">
+                <li><span class="process-number">01</span><span><strong>Lee</strong><small>Extraemos texto de tu PDF.</small></span></li>
+                <li><span class="process-number">02</span><span><strong>Reconoce</strong><small>Aplicamos OCR si es un escaneo.</small></span></li>
+                <li><span class="process-number">03</span><span><strong>Destila</strong><small>Ordenamos las ideas centrales.</small></span></li>
+              </ol>
+            </div>
+            <div class="rail-block privacy-card"><span class="privacy-icon" aria-hidden="true">⊙</span><div><strong>Tu archivo se queda contigo.</strong><p>Todo el análisis ocurre en este dispositivo. Sin cuentas, sin subidas.</p></div></div>
+            <div class="rail-footnote"><span class="mono">PDF·LOCAL·01</span><span class="rail-rule"></span><span class="mono">v0.1</span></div>
+          </aside>
+        </section>
+      </main>
+
+      <footer class="footer"><span>PDF Resumen</span><span>Hecho para leer mejor.</span><span class="footer-mono">LOCAL FIRST / CAPACITOR READY</span></footer>
+    </div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
